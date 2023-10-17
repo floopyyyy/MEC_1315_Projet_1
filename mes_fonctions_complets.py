@@ -22,6 +22,17 @@ def translation(V, deplacement):
     V = V + deplacement
     return V
 
+def rotation(objet, angle_rotation, axe_rotation): #axe de rotation de la forme [1, 0, 0] et angle de rotation en radian
+    F, V, N = objet[0], objet[1], objet[2]
+    if axe_rotation==[1, 0, 0]:
+        R=Rx(angle_rotation)
+    elif axe_rotation==[0, 1, 0]:
+        R=Ry(angle_rotation)
+    elif axe_rotation==[0, 0, 1]:
+        R=Rz(angle_rotation)
+    F, V, N=F, V.dot(R), N.dot(R)
+    return F,V,N
+
 # fonction pour répétition circulaire
 # nb_rep correspond au nombre de répétitions souhaité, doit être int
 
