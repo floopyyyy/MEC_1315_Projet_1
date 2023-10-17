@@ -35,13 +35,9 @@ def rep_circulaire(F, V, N, nb_rep):
         
         F_i, V_i, N_i = F, V, N # créations de arrays F, V et N pour l'itération i
         
-        # rotations
-        V_i = V_i.dot(R)
-        N_i = N_i.dot(R)
-        
         F_final = np.vstack((F_final, F_i+nb_vertex*i)) # concaténation et ajout de nb_vertex*i sur F_i
-        V_final = np.vstack((V_final, V_i)) # concaténation
-        N_final = np.vstack((N_final, N_i)) # concaténation
+        V_final = np.vstack((V_final, V_i.dot(R))) # rotation et concaténation
+        N_final = np.vstack((N_final, N_i.dot(R))) # rotation et concaténation
         
     return F_final, V_final, N_final
 
@@ -74,13 +70,10 @@ def rep_circulaire2(fichier, nb_rep, x, y, z, Grandissement):
         
         F_i, V_i, N_i = F, V, N # créations de arrays F, V et N pour l'itération i
         
-        # rotations
-        V_i = V_i.dot(R)
-        N_i = N_i.dot(R)
         
         F_final = np.vstack((F_final, F_i+nb_vertex*i)) # concaténation et ajout de nb_vertex*i sur F_i
-        V_final = np.vstack((V_final, V_i)) # concaténation
-        N_final = np.vstack((N_final, N_i)) # concaténation
+        V_final = np.vstack((V_final, V_i.dot(R))) # Rotation et concaténation
+        N_final = np.vstack((N_final, N_i.dot(R))) # Rotation concaténation
         
     return F_final, V_final, N_final
 
@@ -94,28 +87,29 @@ def repéperso(planète_total,planete_répliquer,planète_centrale,grandissement
     m=nbre+1
     gi=1/m
     
-    #suite de fibonacci dans les 4 cadrans
+    #suite de fibonacci dans les 4 quadrants
     i=0
     j=1
     a=0
     res=np.array([0])
-    positionx=np.array([0])
-    positiony=np.array([0])
+    
     ppmm=np.array([1,1,-1,-1])
     ppmmtot=np.array([1,1,-1,-1])
     pmmp=np.array([1,-1,-1,1])
     pmmptot=np.array([1,-1,-1,1])
+    #Matrice pour créer la rotation dans les 4 quadrants
     while len(pmmptot)<nbre: #Pour créer la suite +--+ pour x
         pmmptot=np.hstack([pmmptot,pmmp])
     while len(ppmmtot)<nbre: #Pour créer la suite ++-- pour y
         ppmmtot=np.hstack([ppmmtot,ppmm])
-        
+   #Suite de fibonnacci     
     while a<nbre: 
         k=np.array([i+j])
         res=np.hstack([res,k])
         j=i
         i=res[-1]
         a+=1
+        
     positionx=np.array([1])
     positiony=np.array([1])
     positionz=np.zeros(nbre)
@@ -128,11 +122,10 @@ def repéperso(planète_total,planete_répliquer,planète_centrale,grandissement
     p=position
     #Placement des planètes sur la suite de fibonacci
     for i in range(nbre):
-        f1=f
-        n1=n
-        v1=v
-        v1=v1*[i/m]
-        v1=v1+150*p[i] #comme la suite est minime comparer à la taille des planètes, grandissement de la translation de 200
+        f1,n1=f,n
+        
+        v1=v*[i/m]
+        v1=v1+110*p[i] #comme la suite est minime comparer à la taille des planètes, grandissement de la translation de 200
         objet.append([f1,v1,n1])
     F_final,V_final,N_final = fusion(objet)
     return F_final,V_final,N_final
@@ -172,7 +165,8 @@ def centrer(objet):
 def fonction_drapeau(cylindre,triangle,grandissement):
     #Cylindre et triangle
     fc,vc,nc = LireSTL(cylindre)
-    ft,vt,nt= LireSTL(triangle)#dimension cylindre
+    ft,vt,nt= LireSTL(triangle)
+    #dimension cylindre
     vc[:,0]=homothetie(vc[:,0], 0.5)
     vc[:,2]=homothetie(vc[:,2], 3)
     vc[:,1]=homothetie(vc[:,1], 0.5)
@@ -181,7 +175,7 @@ def fonction_drapeau(cylindre,triangle,grandissement):
     vt[:,2]=homothetie(vt[:,2], 4)
     vt=homothetie(vt, 0.15)
 
-
+    #Placer le triangle en haut et à gauche du cylindre
     ycmax=max(vc[:,1])
     vt[:,1]=vt[:,1]+ycmax
     zt=max(vt[:,2])-min(vt[:,2])
@@ -227,7 +221,7 @@ def fonction_satellite(cube,x,y,grandissement):
     v7[:,0],v7[:,1]=v7[:,0]+x,v7[:,1]+y
     return f7,v7,n7
 
-def minion_drapeau(fichier_drapeau, fichier_minion): # fusion de l'objet drapeau et l'objet minion
+def minion_drapeau(fichier_drapeau, fichier_minion, grandissement): # fusion de l'objet drapeau et l'objet minion
     f1, v1, n1 = fichier_drapeau
     nv1 = len(v1)
     
@@ -247,8 +241,9 @@ def minion_drapeau(fichier_drapeau, fichier_minion): # fusion de l'objet drapeau
 
 
     f2, v2, n2 = LireSTL(fichier_minion) # importation de l'objet (2) minion
-    nv2 = len(v2)
     
+    nv2 = len(v2)
+    v2= homothetie(v2, grandissement)
     #coïcidence avec l'origine de l'objet 2
 
     centre_x=(min(v2[:,0])+max(v2[:,0]))/2
