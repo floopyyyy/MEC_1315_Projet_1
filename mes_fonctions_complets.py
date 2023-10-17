@@ -11,82 +11,54 @@ from MEC1315_STL import *
 # fonction pour homothétie
 # facteur doit être float
 
-def homothetie(V, facteur):
-    V = facteur * V
-    return V
+def homothetie(objet, facteur):
+    objet[1] = facteur * objet[1]
+    return objet
 
 # fonction pour translation
 # déplacement doit être array de format [1,3]
 
-def translation(V, deplacement):
-    V = V + deplacement
-    return V
-
-def rotation(objet, angle_rotation, axe_rotation): #axe de rotation de la forme [1, 0, 0] et angle de rotation en radian
-    F, V, N = objet[0], objet[1], objet[2]
-    if axe_rotation==[1, 0, 0]:
-        R=Rx(angle_rotation)
-    elif axe_rotation==[0, 1, 0]:
-        R=Ry(angle_rotation)
-    elif axe_rotation==[0, 0, 1]:
-        R=Rz(angle_rotation)
-    F, V, N=F, V.dot(R), N.dot(R)
-    return F,V,N
-
-# fonction pour répétition circulaire
-# nb_rep correspond au nombre de répétitions souhaité, doit être int
-
-def rep_circulaire(F, V, N, nb_rep):
-    F_final, V_final, N_final = np.empty([0,3]), np.empty([0,3]), np.empty([0,3]) # création des arrays F, V et N finaux
-    nb_vertex = len(V) # on détermine le nombre de vertex de l'objet original
-    
-    for i in range(nb_rep):
-        theta = 2*np.pi/nb_rep*i # on trouve l'angle pour la répétition i
-        R = Rz(theta) # matrice de rotation par rapport à l'axe des z
-        
-        F_i, V_i, N_i = F, V, N # créations de arrays F, V et N pour l'itération i
-        
-        F_final = np.vstack((F_final, F_i+nb_vertex*i)) # concaténation et ajout de nb_vertex*i sur F_i
-        V_final = np.vstack((V_final, V_i.dot(R))) # rotation et concaténation
-        N_final = np.vstack((N_final, N_i.dot(R))) # rotation et concaténation
-        
-    return F_final, V_final, N_final
+def translation(objet, deplacement):
+    objet[1] = objet[1] + deplacement
+    return objet
 
 def fusion(objets): # objets doit être une liste de listes, avec chaque objet à fusionner comme étant une élément-liste tel que [F, V, N]
-    F_tot, V_tot, N_tot =np.empty([0,3]),np.empty([0,3]),np.empty([0,3]) # création des arrays F, V et N finaux
+    objets_fusionnes =np.empty([0,3]),np.empty([0,3]),np.empty([0,3]) # création des arrays F, V et N finaux
     i = 0 # initialisation du compteur
     
     for objet_individuel in objets: # on prend F, V et N de chaque objet à fusionner
         if i == 0:
-            F_tot = np.vstack((F_tot, objet_individuel[0])) # ajout du premier objet à la matrice vide F_tot
+            objets_fusionnes[0] = np.vstack((objets_fusionnes[0], objet_individuel[0])) # ajout du premier objet à la matrice vide F_tot
         else:
-            nb_vertex = len(V_tot) # on détermine le nombre de vertex total des objets déjà ''fusionnés''
-            F_tot = np.vstack((F_tot, objet_individuel[0]+nb_vertex)) # concaténation et ajout de nb_vertex sur F_tot
+            nb_vertex = len(objets_fusionnes[1]) # on détermine le nombre de vertex total des objets déjà ''fusionnés''
+            objets_fusionnes[0] = np.vstack((objets_fusionnes[0], objet_individuel[0]+nb_vertex)) # concaténation et ajout de nb_vertex sur F_tot
             
-        V_tot = np.vstack((V_tot, objet_individuel[1])) # concaténation
-        N_tot = np.vstack((N_tot, objet_individuel[2])) # concaténation
+        objets_fusionnes[1] = np.vstack((objets_fusionnes[1], objet_individuel[1])) # concaténation
+        objets_fusionnes[2] = np.vstack((objets_fusionnes[2], objet_individuel[2])) # concaténation
         i += 1
 
-    return F_tot, V_tot, N_tot
+    return objets_fusionnes
 
-def rep_circulaire2(fichier, nb_rep, x, y, z, Grandissement):
-    F_final, V_final, N_final = np.empty([0,3]), np.empty([0,3]), np.empty([0,3]) # création des arrays F, V et N finaux
-    F,V,N=LireSTL(fichier)
-    nb_vertex = len(V) # on détermine le nombre de vertex de l'objet original
-    V=homothetie(V, Grandissement)
-    V=translation(V, np.array([x, y, z]))
+# fonction pour répétition circulaire
+# nb_rep correspond au nombre de répétitions souhaité, doit être int
+
+def rep_circulaire(objet, nb_rep, deplacement, grandissement):
+    objet_final = np.empty([0,3]), np.empty([0,3]), np.empty([0,3]) # création des arrays F, V et N finaux
+    nb_vertex = len(objet[1]) # on détermine le nombre de vertex de l'objet original
+    objet[1] = homothetie(objet[1], grandissement)
+    objet[1] = translation(objet[1], deplacement)
     for i in range(nb_rep):
         theta = 2*np.pi/nb_rep*i # on trouve l'angle pour la répétition i
         R = Rz(theta) # matrice de rotation par rapport à l'axe des z
         
-        F_i, V_i, N_i = F, V, N # créations de arrays F, V et N pour l'itération i
+        objet_i = objet # créations de arrays F, V et N pour l'itération i
         
         
-        F_final = np.vstack((F_final, F_i+nb_vertex*i)) # concaténation et ajout de nb_vertex*i sur F_i
-        V_final = np.vstack((V_final, V_i.dot(R))) # Rotation et concaténation
-        N_final = np.vstack((N_final, N_i.dot(R))) # Rotation concaténation
+        objet_final[0] = np.vstack((objet_final[0], objet_i[0] + nb_vertex*i)) # concaténation et ajout de nb_vertex*i sur F_i
+        objet_final[1] = np.vstack((objet_final[1], objet_i[1].dot(R))) # Rotation et concaténation
+        objet_final[2] = np.vstack((objet_final[2], objet_i[2].dot(R))) # Rotation concaténation
         
-    return F_final, V_final, N_final
+    return objet_final
 
 def repéperso(planète_total,planete_répliquer,planète_centrale,grandissement_centrale): 
     f,v,n=planete_répliquer  
