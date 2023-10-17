@@ -6,7 +6,7 @@ Created on Sun Oct  8 20:11:38 2023
 """
 "test"
 
-j
+
 import numpy as np
 from MEC1315_STL import *
 from mes_fonctions_complets import *
